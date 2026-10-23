@@ -1,0 +1,9 @@
+streamlit
+torch
+transformers==5.18.0
+opencv-python-headless
+numpy
+Pillow
+scipy
+networkx
+scikit-image
