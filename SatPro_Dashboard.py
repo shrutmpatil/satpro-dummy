@@ -403,17 +403,20 @@ def load_model(checkpoint_bytes):
     checkpoint_path = pathlib.Path("routeformer_uploaded_best.pt")
     checkpoint_path.write_bytes(checkpoint_bytes)
 
-    # Linux-created checkpoints can contain pathlib.PosixPath.
-    original_posix_path = pathlib.PosixPath
+    # Checkpoints may contain pathlib path objects serialized on Windows.
+    # On Linux, map any serialized WindowsPath references to PosixPath.
+    # Do NOT map PosixPath to WindowsPath: WindowsPath cannot be instantiated
+    # on Linux and causes UnsupportedOperation during torch.load().
+    original_windows_path = pathlib.WindowsPath
     try:
-        pathlib.PosixPath = pathlib.WindowsPath
+        pathlib.WindowsPath = pathlib.PosixPath
         checkpoint = torch.load(
             checkpoint_path,
             map_location="cpu",
             weights_only=False,
         )
     finally:
-        pathlib.PosixPath = original_posix_path
+        pathlib.WindowsPath = original_windows_path
 
     if not isinstance(checkpoint, Mapping):
         raise TypeError("Unsupported checkpoint format.")
